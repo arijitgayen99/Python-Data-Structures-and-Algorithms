@@ -1,4 +1,4 @@
-class UndirectedGraph:
+class DirectedGraph:
 	def __init__(self, nodes, edges, nodeWeights = None, edgeWeights = None):
 		
 		self.nodeWeights = nodeWeights
@@ -32,11 +32,9 @@ class UndirectedGraph:
 			if self.edgeWeights:
 				weight = edge[2]
 				self.Graph[first_node].append((second_node, weight))
-				self.Graph[second_node].append((first_node, weight))
 
 			else:
 				self.Graph[first_node].append(second_node)
-				self.Graph[second_node].append(first_node)
 
 	def getNodes(self):
 		if not self.nodeWeights:
@@ -58,9 +56,18 @@ class UndirectedGraph:
 			return self.getNodes()[node]
 
 
-	def getDegree(self, node):
+	def getOutDegree(self, node):
 		return len(self.Graph[node])
-									
+
+
+	def getInDegree(self, node):
+		inDegree = 0
+
+		for edge in self.edges:
+			if edge[1] == node:
+				inDegree += 1
+
+		return inDegree				
 
 	def getAdjacencyList(self):
 		return self.Graph
@@ -74,16 +81,14 @@ class UndirectedGraph:
 				second_node_index = self.nodes.index[edge[1]]
 
 				adjacencyMatrix[first_node_index][second_node_index] = 1
-				adjacencyMatrix[second_node_index][first_node_index] = 1
 
 		else:
 			for edge in self.edges:
-				first_node_index = self.nodes.index[edge[0]]
-				second_node_index = self.nodes.index[edge[1]]
+				first_node_index = self.nodes.index(edge[0])
+				second_node_index = self.nodes.index(edge[1])
 				weight = edge[2]
 
 				adjacencyMatrix[first_node_index][second_node_index] = weight
-				adjacencyMatrix[second_node_index][first_node_index] = weight
 
 		return adjacencyMatrix
 
@@ -115,7 +120,6 @@ class UndirectedGraph:
 			elif not self.edgeWeights:
 				self.edges.append(edge)
 				self.Graph[edge[0]].append(edge[1])
-				self.Graph[edge[1]].append(edge[0])
 
 			else:
 				edge = list(edge)
@@ -123,10 +127,12 @@ class UndirectedGraph:
 				edge = tuple(edge)
 				self.edges.append(edge)
 				self.Graph[edge[0]].append((edge[1], weight))
-				self.Graph[edge[1]].append((edge[0], weight))
 
 		else:
 			print("Edge Already Present!")
+
+
+
 
 	def breadthFirstSearch(self, source):
 		from queue import Queue
@@ -180,111 +186,6 @@ class UndirectedGraph:
 
 
 
-	def primsMst(self):
-
-		if not self.edgeWeights:
-			print("Edges should be Weighted to apply Prim's Algorithm!")
-
-		else:
-			import math
-
-			adjacencyMatrix = self.getAdjacencyMatrix()
-			noOfNodes = len(self.nodes)
-			visited = [0] * noOfNodes
-
-			noOfEdges = 0
-			edgesMst = []
-			costMst = 0
-			visited[0] = True
-
-			while (noOfEdges < noOfNodes-1):
-				minimum = math.inf
-				first_node = 0
-				second_node = 0
-				for u in range(noOfNodes):
-					if visited[u]:
-						for v in range(noOfNodes):
-							if ((not visited[v]) and adjacencyMatrix[u][v]):  
-								if minimum > adjacencyMatrix[u][v]:
-									minimum = adjacencyMatrix[u][v]
-									first_node = u
-									second_node = v
-				edge = (self.nodes[first_node], self.nodes[second_node], adjacencyMatrix[first_node][second_node])
-				costMst += adjacencyMatrix[first_node][second_node]
-				edgesMst.append(edge)
-				visited[second_node] = True
-				noOfEdges += 1
-			return edgesMst, costMst
-			
-
-	def kruskalMstUtilOne(self, parent, index):
-		if parent[index] == index:
-			return index
-
-		return self.kruskalMstUtilOne(parent, parent[index])
-
-	def kruskalMstUtilTwo(self, parent, rank, u, v):
-		u_parent = self.kruskalMstUtilOne(parent, u)
-		v_parent = self.kruskalMstUtilOne(parent, v)
-
-		if rank[u_parent] < rank[v_parent]:
-			parent[u_parent] = v_parent
-		elif rank[u_parent] > rank[v_parent]:
-			parent[v_parent] = u_parent
-		else:
-			parent[v_parent] = u_parent
-			rank[u_parent] += 1
-		
-
-	def kruskalMst(self):
-		if not self.edgeWeights:
-			print("Edges should be Weighted to apply Kruskal's Algorithm!")
-
-		else:
-
-			edgesMst = []
-			costMst = 0
-			weightedEdges = []
-
-			for index in range(len(self.edges)):
-				first_node, second_node, weight = self.edges[index]
-				first_node_index = self.nodes.index(first_node)
-				second_node_index = self.nodes.index(second_node)
-
-				edge = [first_node_index, second_node_index, weight]
-				weightedEdges.append(edge)
-
-			weightedEdges = sorted(weightedEdges, key = lambda x:x[2])
-
-			noOfNodes = len(self.nodes)
-			parent = []
-			rank = []
-
-			i = 0
-			j = 0
-
-			for index in range(noOfNodes):
-				parent.append(index)
-				rank.append(0)
-
-			while j < noOfNodes-1:
-				first_node, second_node, weight = weightedEdges[i]
-
-				u = self.kruskalMstUtilOne(parent, first_node)
-				v = self.kruskalMstUtilOne(parent, second_node)
-
-				if u != v:
-					j += 1
-					edgesMst.append((self.nodes[weightedEdges[i][0]], self.nodes[weightedEdges[i][1]], weightedEdges[i][2]))
-					costMst += weightedEdges[i][2]
-					self.kruskalMstUtilTwo(parent, rank, u, v)
-
-				i += 1
-
-			return edgesMst, costMst
-
-
-
 	def dijkstraShortestPath(self, node):
 		if not self.edgeWeights:
 			print("Edges should be Weighted to apply Dijkstra's Algorithm!")
@@ -324,6 +225,47 @@ class UndirectedGraph:
 			return shortestPaths
 
 
+	def bellmanFord(self, source):
+		if not self.edgeWeights:
+			print("Edges should be weighted to apply Bellman Ford Algorithm!")
+
+		else:
+
+			import math
+
+			noOfNodes = len(self.nodes)
+			distance = [math.inf] * noOfNodes
+			isNegativeCycle = False
+
+			distance[self.nodes.index(source)] = 0
+
+			for _ in range(noOfNodes):
+
+				for edge in self.edges:
+					first_node_index = self.nodes.index(edge[0])
+					second_node_index = self.nodes.index(edge[1])
+					weight = edge[2]
+
+					if distance[first_node_index] + weight < distance[second_node_index]:
+						distance[second_node_index] = distance[first_node_index] + weight
+
+
+			for edge in self.edges:
+				first_node_index = self.nodes.index(edge[0])
+				second_node_index = self.nodes.index(edge[1])
+				weight = edge[2]
+
+				if distance[first_node_index] + weight < distance[second_node_index]:
+					isNegativeCycle = True
+					break
+
+			shortestPaths = {}
+			for index in range(len(distance)):
+				shortestPaths[self.nodes[index]] = distance[index]
+
+			return shortestPaths, isNegativeCycle
+
+
 	def shortestPath(self, source, destination):
 		shortestPaths = self.dijkstraShortestPath(source)
 
@@ -331,12 +273,108 @@ class UndirectedGraph:
 		return shortestPaths[destinationIndex]
 
 
-	def isCycle(self):
-		if len(self.edges) >= len(self.nodes):
-			return True
+	def floydWarshal(self):
+		if not self.edgeWeights:
+			print("Edges should be weighted for applying Floyd Warshal Algorithm!")
+
 
 		else:
-			return False
+			import math
+
+			noOfNodes = len(self.nodes)
+			matrix = [[math.inf for i in range(noOfNodes)] for j in range(noOfNodes)]
+
+			for index in range(noOfNodes):
+				matrix[index][index] = 0
+
+			for edge in self.edges:
+				first_node_index = self.nodes.index(edge[0])
+				second_node_index = self.nodes.index(edge[1])
+				weight = edge[2]
+
+				matrix[first_node_index][second_node_index] = weight
+
+			for i in range(noOfNodes):
+				for j in range(noOfNodes):
+					for k in range(noOfNodes):
+
+						matrix[j][k] = min(matrix[j][k], matrix[j][i] + matrix[i][k])
+
+
+			return matrix
+
+	def isCyclicUtil(self, nodeIndex, visited, Stack):
+		visited[nodeIndex] = True
+		Stack[nodeIndex] = True
+
+		for adj in self.getAdjacentNodes(self.nodes[nodeIndex]):
+			
+			if self.edgeWeights:
+				index = self.nodes.index(adj[0])
+			else:
+				index = self.nodes.index(adj)
+
+
+			if not visited[index]:
+				return self.isCyclicUtil(index, visited, Stack)
+
+			elif Stack[index]:
+				return True
+
+		Stack[nodeIndex] = False
+		return False
+
+
+	def isCyclic(self):
+		noOfNodes = len(self.nodes)
+		visited = [False] * noOfNodes
+		Stack = [False] * noOfNodes
+
+		for index in range(noOfNodes):
+			if not visited[index]:
+				if self.isCyclicUtil(index, visited, Stack):
+					return True
+
+		return False
+
+
+	def topologicalSortUtil(self, nodeIndex, visited, Stack):
+		visited[nodeIndex] = True
+
+		for adj in self.getAdjacentNodes(self.nodes[nodeIndex]):
+			if self.edgeWeights:
+				index = self.nodes.index(adj[0])
+
+			else:
+				index = self.nodes.index(adj)
+
+			if not visited[index]:
+				self.topologicalSortUtil(index, visited, Stack)
+
+		Stack.append(nodeIndex)
+
+
+	def topologicalSort(self):
+
+		if self.isCyclic():
+			print("Topological Sort not possible for Cyclic Graph")
+	 
+		else:
+			noOfNodes = len(self.nodes)
+			visited = [False] * noOfNodes
+			Stack = []
+
+			for index in range(noOfNodes):
+				if not visited[index]:
+					self.topologicalSortUtil(index, visited, Stack)
+
+			Stack = Stack[::-1]
+			sortedNodes = []
+			for index in Stack:
+				sortedNodes.append(self.nodes[index])
+		
+			return sortedNodes
+
 
 	def findPathUtil(self, source, destination, visited, path, allPaths):
 
@@ -355,6 +393,8 @@ class UndirectedGraph:
 		
 		visited[self.nodes.index(source)] = False
 		path.pop()
+
+		
 
 	def findPath(self, source, destination):
 		if (source not in self.nodes) or (destination not in self.nodes):
