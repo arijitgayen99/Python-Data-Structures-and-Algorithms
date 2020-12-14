@@ -19,8 +19,6 @@ class UndirectedGraph:
 
 		self.Graph = {}
 
-
-	def createGraph(self):
 		for index in range(len(self.nodes)):
 			node = self.nodes[index]
 			self.Graph[node] = []
@@ -434,8 +432,6 @@ class DirectedGraph:
 
 		self.Graph = {}
 
-
-	def createGraph(self):
 		for index in range(len(self.nodes)):
 			node = self.nodes[index]
 			self.Graph[node] = []
@@ -839,7 +835,76 @@ class DirectedGraph:
 
 
 
-	def getStronglyConnectedComponents(self):
 
+	def fillOrder(self, index, visited, S):
+		visited[index] = True
+
+		for adj in self.Graph[self.nodes[index]]:
+			if self.edgeWeights:
+				adj = adj[0]
+
+			adjIndex = self.nodes.index(adj)
+			if not visited[adjIndex]:
+				self.fillOrder(adjIndex, visited, S)
+
+		S.insert(index)
+
+
+	def getTranspose(self):
+		nodes = self.nodes
+		nodeWeights = self.nodeWeights
 		
+		if not self.edgeWeights:
+			edges = list(map(lambda sub: (sub[1], sub[0]), self.edges))
+			edgeWeights = None
+
+		else:
+			edges = list(map(lambda sub: (sub[1], sub[0], sub[2]), self.edges))
+			edgeWeights = list(map(lambda sub: sub[2], self.edges))
 		
+		reverseGraph = DirectedGraph(nodes, edges, nodeWeights = nodeWeights, edgeWeights = edgeWeights)
+
+
+		return reverseGraph
+
+
+	def dfsUtil(self, index, visited, component):
+		visited[index] = True
+		component.append(self.nodes[index])
+
+		for adj in self.Graph[self.nodes[index]]:
+			if self.edgeWeights:
+				adj = adj[0]
+
+			adjIndex = self.nodes.index(adj)
+			if not visited[adjIndex]:
+				return self.dfsUtil(adjIndex, visited, component)
+
+		return component
+
+	def getStronglyConnectedComponents(self):
+		from LinearDataStructures import Stack
+
+		noOfNodes = len(self.nodes)
+		visited = [False] * noOfNodes
+		
+		S = Stack()
+		for index in range(noOfNodes):
+			if not visited[index]:
+				self.fillOrder(index, visited, S)
+
+
+		reverseGraph = self.getTranspose()
+		stronglyConnectedComponents = []
+		visited = [False] * noOfNodes
+		
+		while not S.isEmpty():
+			index = S.pop()
+
+			if not visited[index]:
+				component = []
+				component = reverseGraph.dfsUtil(index, visited, component)
+				stronglyConnectedComponents.append(component)
+
+
+		return stronglyConnectedComponents
